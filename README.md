@@ -59,3 +59,20 @@ docker run -d --name oitc \
     oitc2
 ```
 
+## Troubleshooting
+
+### Fix problems with the gearmand and docker
+These commands were executed during the custom openitcockpit installation.
+
+Due to the openitcockpit config generator, the customizations will be overwritten.
+So if there were still problems, execute these commands again.
+
+```
+systemctl stop openitcockpit-graphing gearman-job-server
+sed -e '/ExecStartPre/ s/^#*/#/' -i /lib/systemd/system/openitcockpit-graphing.service
+sed -i "/image:\ openitcockpit\/carbon-c-relay:latest/c\\ \ \ \ image:\ mist\/carbon-c-relay" /opt/openitc/docker/container/graphing/docker-compose.yml
+sed -i ':a;N;$!ba;s/\/opt\/openitc\/etc\/carbon:\/etc\/carbon[^\n]*/\/opt\/openitc\/etc\/carbon:\/etc\/carbon-c-relay/4' /opt/openitc/docker/container/graphing/docker-compose.yml
+sed -i "/PARAMS=\"--listen\=localhost\ /c\PARAMS=\"--listen=127.0.0.1 \\\\" /etc/default/gearman-job-server
+systemctl daemon-reload
+systemctl start openitcockpit-graphing gearman-job-server
+```
